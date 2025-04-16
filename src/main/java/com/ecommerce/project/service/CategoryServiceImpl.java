@@ -45,30 +45,30 @@ public class CategoryServiceImpl implements CategoryService {
         if(categoryFromDB != null)
             throw new APIException("Category with the name " + category.getCategoryName() + " already exists !");
         Category savedCategory= categoryRepository.save(category);
-        CategoryDTO savedCategoryDTO = modelMapper.map(savedCategory, CategoryDTO.class);
-        return savedCategoryDTO;
+        return modelMapper.map(savedCategory, CategoryDTO.class);
 
     }
 
     @Override
-    public String deleteCategory(Long categoryId) {
+    public CategoryDTO deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category","categoryId",categoryId));
 
 
         categoryRepository.delete(category);
-        return "deleted " + categoryId;
+        return modelMapper.map(category, CategoryDTO.class);
 
     }
 
     @Override
-    public Category updateCategory(Category category, Long categoryId) {
+    public CategoryDTO updateCategory(CategoryDTO categoryDTO, Long categoryId) {
 
         Category savedCategory = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category","categoryId", categoryId));
 
+        Category category = modelMapper.map(categoryDTO, Category.class);
         category.setCategoryId(categoryId);
         savedCategory = categoryRepository.save(category);
-        return savedCategory;
+        return modelMapper.map(savedCategory, CategoryDTO.class);
     }
 }
