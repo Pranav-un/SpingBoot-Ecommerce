@@ -34,7 +34,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Category", "categoryId", categoryId));
+
         Product product = modelMapper.map(productDTO, Product.class);
         product.setImage("default.png");
         product.setCategory(category);
@@ -51,6 +53,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductDTO> productDTOS = products.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();
+
         ProductResponse productResponse = new ProductResponse();
         productResponse.setContent(productDTOS);
         return productResponse;
@@ -66,18 +69,19 @@ public class ProductServiceImpl implements ProductService {
         List<ProductDTO> productDTOS = products.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();
+
         ProductResponse productResponse = new ProductResponse();
         productResponse.setContent(productDTOS);
         return productResponse;
-
     }
 
     @Override
     public ProductResponse searchProductByKeyword(String keyword) {
-        List<Product> products = productRepository.findByProductNameLikeIgnoreCase('%' + keyword + "%");
+        List<Product> products = productRepository.findByProductNameLikeIgnoreCase('%' + keyword + '%');
         List<ProductDTO> productDTOS = products.stream()
                 .map(product -> modelMapper.map(product, ProductDTO.class))
                 .toList();
+
         ProductResponse productResponse = new ProductResponse();
         productResponse.setContent(productDTOS);
         return productResponse;
@@ -85,17 +89,21 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
+        // Get the existing product from DB
         Product productFromDb = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
         Product product = modelMapper.map(productDTO, Product.class);
 
+        // Update the product info with the one in request body
         productFromDb.setProductName(product.getProductName());
         productFromDb.setDescription(product.getDescription());
         productFromDb.setQuantity(product.getQuantity());
-        productFromDb.setPrice(product.getPrice());
         productFromDb.setDiscount(product.getDiscount());
+        productFromDb.setPrice(product.getPrice());
         productFromDb.setSpecialPrice(product.getSpecialPrice());
 
+        // Save to database
         Product savedProduct = productRepository.save(productFromDb);
 
         return modelMapper.map(savedProduct, ProductDTO.class);
@@ -105,28 +113,30 @@ public class ProductServiceImpl implements ProductService {
     public ProductDTO deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
         productRepository.delete(product);
         return modelMapper.map(product, ProductDTO.class);
     }
 
     @Override
     public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
-
-//        Get the product from DB
-        Product ProductFromDb = productRepository.findById(productId)
+        // Get the product from DB
+        Product productFromDb = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-//        Upload image to Server && Get the file name
-        String path = "/images";
-        String filename = uploadImage(path, image);
-        ProductFromDb.setImage(filename);
+        // Upload image to server
+        // Get the file name of uploaded image
+        String path = "images/";
+        String fileName = uploadImage(path, image);
 
-//        save updated product
-        Product updatedProduct = productRepository.save(ProductFromDb);
+        // Updating the new file name to the product
+        productFromDb.setImage(fileName);
 
-//        return DTO after mapping product to DTO
+        // Save updated product
+        Product updatedProduct = productRepository.save(productFromDb);
+
+        // return DTO after mapping product to DTO
         return modelMapper.map(updatedProduct, ProductDTO.class);
-
     }
 
     private String uploadImage(String path, MultipartFile file) throws IOException {
@@ -150,6 +160,4 @@ public class ProductServiceImpl implements ProductService {
         // returning file name
         return fileName;
     }
-
-
 }
